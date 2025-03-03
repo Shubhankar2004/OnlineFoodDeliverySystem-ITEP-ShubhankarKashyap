@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Browse Food Items - Food Delivery</title>
+
+    <!-- Bootstrap Icons and Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Your custom stylesheet -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+
+    <style>
+      body {
+        background-color: antiquewhite;
+        color: black;
+      }
+
+      /* The "circle -> rectangle" transformation card */
+      .card {
+        width: 350px;               /* circle width */
+        height: 350px;              /* circle height */
+        border-radius: 50%;         /* circle shape */
+        overflow: hidden;
+        margin: 50px;               /* spacing between cards */
+        box-shadow: 0 50px 20px rgba(0, 0, 0, 0.5);
+        transition: all 0.5s ease;
+        position: relative;         /* so .card-body can be absolutely positioned */
+      }
+
+      .card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: height 0.5s ease;
+        display: block;
+      }
+
+      /* Initially hide the text portion off the bottom */
+      .card-body {
+        position: absolute;
+        top: 250px;       /* same as initial circle height */
+        left: 0;
+        right: 0;
+        background: white;
+        color: black;
+        padding: 15px;
+        transition: all 0.5s ease;
+        opacity: 0;
+      }
+
+      /* On hover, become rectangular, reveal text portion */
+      .card:hover {
+        height: 570px;        /* final rectangle height */
+        border-radius: 30px;  /* slightly rounded corners */
+      }
+
+      .card:hover .card-img-top {
+        height: 300px;        /* top portion for the image in rectangle view */
+      }
+
+      .card:hover .card-body {
+        top: 300px;           /* place body just below the image */
+        opacity: 1;           /* fade in */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Include User Navbar Fragment (same as old code) -->
+    <div th:replace="fragments :: userNavbar"></div>
+
+    <div class="container my-5">
+      <h2 class="mb-4">Browse Food Items</h2>
+
+      <!-- Search and Filter Section -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <input type="text" id="searchName" class="form-control" placeholder="Search by name" />
+        </div>
+        <div class="col-md-3">
+          <select id="filterCategory" class="form-select">
+            <option value="">All Categories</option>
+            <option
+              th:each="cat : ${allCategories}"
+              th:value="${cat.id}"
+              th:text="${cat.name}"
+            ></option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select id="filterFoodType" class="form-select">
+            <option value="">All Food Types</option>
+            <option value="VEG">VEG</option>
+            <option value="NONVEG">NONVEG</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button id="searchBtn" class="btn btn-primary w-100">Search</button>
+        </div>
+      </div>
+
+      <!-- Food Items Cards -->
+      <div class="row" id="foodItemsCards" th:if="${!#lists.isEmpty(foodItems)}">
+        <div class="col-md-4 mb-4" th:each="food : ${foodItems}">
+          <div class="card">
+            <!-- Circle image that expands on hover -->
+            <img class="card-img-top"
+                 th:if="${food.image != null}"
+                 th:src="${food.image.downloadUrl}"
+                 alt="Food Image" />
+            <img class="card-img-top"
+                 th:if="${food.image == null}"
+                 src="/images/default-food.png"
+                 alt="Default Food Image" />
+
+            <!-- Hidden text portion that slides up on hover -->
+            <div class="card-body">
+              <h5 class="card-title" th:text="${food.name}">Food Name</h5>
+              <p class="card-text" th:text="${food.description}">Description</p>
+              <p class="card-text">
+                <strong>Price: </strong>₹<span th:text="${food.price}">0</span>
+              </p>
+              <!-- Quantity and Add to Cart Section -->
+              <div class="d-flex align-items-center mb-2">
+                <button
+                  class="btn btn-outline-secondary btn-sm"
+                  type="button"
+                  th:onclick="'decrementQuantity(' + ${food.id} + ')'"
+                >
+                  -
+                </button>
+                <input
+                  type="text"
+                  class="form-control text-center mx-2"
+                  style="width: 50px;"
+                  th:id="'qty_' + ${food.id}"
+                  value="1"
+                  readonly
+                />
+                <button
+                  class="btn btn-outline-secondary btn-sm"
+                  type="button"
+                  th:onclick="'incrementQuantity(' + ${food.id} + ')'"
+                >
+                  +
+                </button>
+              </div>
+              <button
+                class="btn btn-success w-100"
+                type="button"
+                th:onclick="'addToCart(' + ${food.id} + ', document.getElementById(\'qty_' + ${food.id} + '\').value)'"
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div th:if="${#lists.isEmpty(foodItems)}">
+        <p>No food items found. Please try different filters.</p>
+      </div>
+    </div>
+
+    <!-- Footer Fragment (same as old code) -->
+    <div th:replace="fragments :: footer"></div>
+
+    <!-- Bootstrap JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    ></script>
+
+    <script th:inline="javascript">
+      // Increment/Decrement quantity
+      function incrementQuantity(foodId) {
+        let qtyInput = document.getElementById("qty_" + foodId);
+        qtyInput.value = parseInt(qtyInput.value) + 1;
+      }
+      function decrementQuantity(foodId) {
+        let qtyInput = document.getElementById("qty_" + foodId);
+        if (parseInt(qtyInput.value) > 1) {
+          qtyInput.value = parseInt(qtyInput.value) - 1;
+        }
+      }
+
+      // Add to Cart
+      function addToCart(foodId, quantity) {
+        const userId = /*[[${user.id}]]*/ 0;
+        fetch(`/onlinefoodDelivery/cartItems/add/Item?userId=${userId}&foodItemId=${foodId}&quantity=${quantity}`, {
+          method: "POST"
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.message && data.message.toLowerCase().includes("added successfully")) {
+            alert("Item added to cart!");
+            location.reload();
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch(error => {
+          console.error("Error adding to cart:", error);
+          alert("Error adding to cart");
+        });
+      }
+
+      // Search for items
+      document.getElementById("searchBtn").addEventListener("click", function() {
+        const name = document.getElementById("searchName").value.trim();
+        const categoryId = document.getElementById("filterCategory").value;
+        const foodType = document.getElementById("filterFoodType").value;
+        let query = "?";
+        if(name) {
+          query += `name=${encodeURIComponent(name)}&`;
+        }
+        if(categoryId) {
+          query += `categoryId=${encodeURIComponent(categoryId)}&`;
+        }
+        if(foodType) {
+          query += `foodType=${encodeURIComponent(foodType)}&`;
+        }
+        if(query.endsWith("&") || query.endsWith("?")) {
+          query = query.slice(0, -1);
+        }
+
+        fetch(`/onlinefoodDelivery/fooditems/search${query}`, { method: "GET" })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message && data.message.toLowerCase().includes("found")) {
+            const cardsContainer = document.getElementById("foodItemsCards");
+            cardsContainer.innerHTML = "";
+            data.data.forEach(food => {
+              const colDiv = document.createElement("div");
+              colDiv.className = "col-md-4 mb-4";
+
+              let imgTag = `<img class="card-img-top" src="/images/default-food.png" alt="Default Food Image" />`;
+              if (food.image) {
+                imgTag = `<img class="card-img-top" src="${food.image.downloadUrl}" alt="Food Image" />`;
+              }
+
+              colDiv.innerHTML = `
+              <div class="card">
+                ${imgTag}
+                <div class="card-body">
+                  <h5 class="card-title">${food.name}</h5>
+                  <p class="card-text">${food.description}</p>
+                  <p class="card-text"><strong>Price: </strong> ₹ ${food.price}</p>
+                  <div class="d-flex align-items-center mb-2">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="decrementQuantity(${food.id})">-</button>
+                    <input type="text" class="form-control text-center mx-2" style="width: 50px;" id="qty_${food.id}" value="1" readonly />
+                    <button class="btn btn-outline-secondary btn-sm" onclick="incrementQuantity(${food.id})">+</button>
+                  </div>
+                  <button class="btn btn-success w-100" onclick="addToCart(${food.id}, document.getElementById('qty_${food.id}').value)">Add to Cart</button>
+                </div>
+              </div>`;
+              cardsContainer.appendChild(colDiv);
+            });
+          } else {
+            alert(data.message || "No food items found");
+          }
+        })
+        .catch(error => {
+          console.error("Error searching food items:", error);
+          alert("Error searching food items");
+        });
+      });
+    </script>
+  </body>
+</html>
+
+
+<!-- <!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Browse Food Items - Food Delivery</title>
+    <link
+  		rel="stylesheet"
+  		href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+	/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <style>
+    
+    body{
+    	background-color:antiquewhite;
+    	color:black;
+	}
+	
+	.fade-out {
+    	opacity: 1;
+    	transition: opacity 0.5s ease-in-out;
+	}
+	
+	.card {
+        border-radius: 100%;
+        overflow: hidden;
+        /* Set an initial height if needed */
+        height: 250px;
+        margin: 50px 50px 50px 50px;
+        box-shadow: 0 50px 20px rgba(0, 0, 0, 0.5);
+        transition: all 0.5s ease;
+      }
+      
+      /* Card image: force the image to fill the card and maintain aspect ratio */
+      .card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .card:hover {
+        border-radius: 30px;
+        transform: scale(1.1);
+        cursor: pointer;
+        height: 570px;
+      }
+    
+    </style>
+  </head>
+  <body>
+    Include User Navbar Fragment
+    <div th:replace="fragments :: userNavbar"></div>
+
+    <div class="container my-5">
+      <h2 class="mb-4">Browse Food Items</h2>
+
+      Search and Filter Section (similar to manageFoodItems.html)
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <input type="text" id="searchName" class="form-control" placeholder="Search by name" />
+        </div>
+        <div class="col-md-3">
+          <select id="filterCategory" class="form-select">
+            <option value="">All Categories</option>
+            <option
+              th:each="cat : ${allCategories}"
+              th:value="${cat.id}"
+              th:text="${cat.name}"
+            ></option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select id="filterFoodType" class="form-select">
+            <option value="">All Food Types</option>
+            <option value="VEG">VEG</option>
+            <option value="NONVEG">NONVEG</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button id="searchBtn" class="btn btn-primary w-100">Search</button>
+        </div>
+      </div>
+
+      Food Items Cards
+      <div class="row" id="foodItemsCards" th:if="${!#lists.isEmpty(foodItems)}">
+        <div class="col-md-4 mb-4" th:each="food : ${foodItems}">
+          <div class="card">
+            <div class="card-img-top">
+              Single image check
+              <img th:if="${food.image != null}"
+                   th:src="${food.image.downloadUrl}"
+                   alt="Food Image"
+                   class="img-fluid" />
+              <img th:if="${food.image == null}"
+                   src="/images/default-food.png"
+                   alt="Default Food Image"
+                   class="img-fluid" />
+            </div>
+            <div class="card-body">
+              <h5 class="card-title" th:text="${food.name}">Food Name</h5>
+              <p class="card-text" th:text="${food.description}">Description</p>
+              <p class="card-text">
+                <strong>Price: </strong> ₹<span th:text="${food.price}">0</span>
+              </p>
+              Quantity and Add to Cart Section
+              <div class="d-flex align-items-center mb-2">
+                <button class="btn btn-outline-secondary btn-sm"
+                        type="button"
+                        th:onclick="'decrementQuantity(' + ${food.id} + ')'">
+                  -
+                </button>
+                <input type="text"
+                       class="form-control text-center mx-2"
+                       style="width: 50px;"
+                       th:id="'qty_' + ${food.id}"
+                       value="1"
+                       readonly />
+                <button class="btn btn-outline-secondary btn-sm"
+                        type="button"
+                        th:onclick="'incrementQuantity(' + ${food.id} + ')'">
+                  +
+                </button>
+              </div>
+              <button class="btn btn-success w-100"
+                      type="button"
+                      th:onclick="'addToCart(' + ${food.id} + ', document.getElementById(\'qty_' + ${food.id} + '\').value)'">
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div th:if="${#lists.isEmpty(foodItems)}">
+        <p>No food items found. Please try different filters.</p>
+      </div>
+    </div>
+
+    <div th:replace="fragments :: footer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+    
+      let userId = /*[[${user != null ? user.id : 0}]]*/ 0;
+
+    
+      // Increment/Decrement functions
+      function incrementQuantity(foodId) {
+        let qtyInput = document.getElementById("qty_" + foodId);
+        qtyInput.value = parseInt(qtyInput.value) + 1;
+      }
+      function decrementQuantity(foodId) {
+        let qtyInput = document.getElementById("qty_" + foodId);
+        if (parseInt(qtyInput.value) > 1) {
+          qtyInput.value = parseInt(qtyInput.value) - 1;
+        }
+      }
+
+      // Add to Cart function
+      function addToCart(foodId, quantity) {
+        // Get the userId from a Thymeleaf variable (ensure your controller adds 'user' to the model)
+        const userId = /*[[${user.id}]]*/ 0;
+        fetch(`/onlinefoodDelivery/cartItems/add/Item?userId=${userId}&foodItemId=${foodId}&quantity=${quantity}`, {
+          method: "POST"
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.message && data.message.toLowerCase().includes("added successfully")) {
+            alert("Item added to cart!");
+            // Optionally, update the cart badge or reload to show changes
+            location.reload();
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch(error => {
+          console.error("Error adding to cart:", error);
+          alert("Error adding to cart");
+        });
+      }
+
+      // Search function for food items
+      document.getElementById("searchBtn").addEventListener("click", function() {
+        const name = document.getElementById("searchName").value.trim();
+        const categoryId = document.getElementById("filterCategory").value;
+        const foodType = document.getElementById("filterFoodType").value;
+        let query = "?";
+        if(name) {
+          query += `name=${encodeURIComponent(name)}&`;
+        }
+        if(categoryId) {
+          query += `categoryId=${encodeURIComponent(categoryId)}&`;
+        }
+        if(foodType) {
+          query += `foodType=${encodeURIComponent(foodType)}&`;
+        }
+        if(query.endsWith("&") || query.endsWith("?")) {
+          query = query.slice(0, -1);
+        }
+        
+        fetch(`/onlinefoodDelivery/fooditems/search${query}`, { method: "GET" })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message && data.message.toLowerCase().includes("found")) {
+            const cardsContainer = document.getElementById("foodItemsCards");
+            cardsContainer.innerHTML = "";
+            data.data.forEach(food => {
+              const colDiv = document.createElement("div");
+              colDiv.className = "col-md-4 mb-4";
+
+              // Single approach: food.image
+              let imgTag = `<img src="/images/default-food.png" alt="Default Food Image" class="img-fluid" />`;
+              if (food.image) {
+                imgTag = `<img src="${food.image.downloadUrl}" alt="Food Image" class="img-fluid" />`;
+              }
+
+              colDiv.innerHTML = `
+              <div class="card">
+              <div class="card-img-top">
+                ${imgTag}
+              </div>
+                <div class="card-body">
+                  <h5 class="card-title">${food.name}</h5>
+                  <p class="card-text">${food.description}</p>
+                  <p class="card-text"><strong>Price: </strong> $${food.price}</p>
+                  <div class="d-flex align-items-center mb-2">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="decrementQuantity(${food.id})">-</button>
+                    <input type="text" class="form-control text-center mx-2" style="width: 50px;" id="qty_${food.id}" value="1" readonly />
+                    <button class="btn btn-outline-secondary btn-sm" onclick="incrementQuantity(${food.id})">+</button>
+                  </div>
+                  <button class="btn btn-success w-100" onclick="addToCart(${food.id}, document.getElementById('qty_${food.id}').value)">Add to Cart</button>
+                </div>
+              </div>`;
+              cardsContainer.appendChild(colDiv);
+            });
+          } else {
+            alert(data.message || "No food items found");
+          }
+        })
+        .catch(error => {
+          console.error("Error searching food items:", error);
+          alert("Error searching food items");
+        });
+      });
+        
+    </script>
+  </body>
+</html> -->

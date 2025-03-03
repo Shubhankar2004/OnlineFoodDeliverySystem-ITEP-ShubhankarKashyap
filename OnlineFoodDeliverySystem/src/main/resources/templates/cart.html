@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cart - Food Delivery</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+  </head>
+  <body>
+    <!-- Include User Navbar for Cart -->
+    <div th:replace="fragments :: userNavbarCart"></div>
+
+    <div class="container my-5">
+      <h2 class="mb-4">Your Cart</h2>
+      <div th:if="${#lists.isEmpty(cart.items)}">
+        <p>
+          Your cart is empty.
+          <a th:href="@{/onlinefoodDelivery/fooditems/browse}">Browse Food Items</a>
+        </p>
+      </div>
+      <div th:if="${!#lists.isEmpty(cart.items)}">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Food Item</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="item : ${cart.items}" th:id="'row-' + ${item.foodItem.id}">
+              <td th:text="${item.foodItem.name}">Food Name</td>
+              <td>
+                <div class="input-group">
+                  <button class="btn btn-outline-secondary" type="button"
+                    th:onclick="'updateQuantity(' + ${cart.id} + ',' + ${item.foodItem.id} + ', -1)'">-</button>
+                  <input type="text" class="form-control text-center" th:id="'qty_' + ${item.foodItem.id}" th:value="${item.quantity}" readonly />
+                  <button class="btn btn-outline-secondary" type="button"
+                    th:onclick="'updateQuantity(' + ${cart.id} + ',' + ${item.foodItem.id} + ', 1)'">+</button>
+                </div>
+              </td>
+              <td th:text="${item.unitPrice}">0</td>
+              <td th:text="${item.totalPrice}">0</td>
+              <td>
+                <button class="btn btn-danger btn-sm" th:onclick="'removeItem(' + ${cart.id} + ',' + ${item.foodItem.id} + ')'">Remove</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="d-flex justify-content-end">
+          <h4>Total: ₹<span id="amount_field" th:text="${cart.totalAmount}">0</span></h4>
+        </div>
+        <!-- Payment and Place Order -->
+        <div class="mt-4">
+          <div class="row">
+            <div class="col-md-4">
+              <label for="paymentMethod" class="form-label">Payment Method</label>
+              <select id="paymentMethod" name="paymentMethod" class="form-select">
+                <option value="cash">Cash</option>
+                <option value="credit">Online Payment</option>
+              </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button id="placeOrderBtn" class="btn btn-primary">
+                Place Order
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div th:replace="fragments :: footer"></div>
+    
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+      crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+      // Modified paymentStart function accepting a callback
+      function paymentStart(callback) {
+        console.log("payment started");
+        let amount = parseInt($("#amount_field").text(), 10);
+        console.log(amount); 
+        if (!amount) {
+          alert("Amount is blank");
+          return;
+        }
+        $.ajax({
+          url: "/onlinefoodDelivery/orders/createOrder",
+          data: JSON.stringify({amount: amount, info: "Order_request"}),
+          contentType: "application/json",
+          type: "POST",
+          dataType: "json",
+          success: function(response) {
+            console.log(response);
+            if(response.status === "created") {
+              let options = {
+                key: "rzp_test_kDmY5OZwR2wFim",
+                amount: response.amount,
+                currency: "INR",
+                name: "OnlineFoodDeliveryPayment",
+                description: "Test Transaction",
+                image: "/images/food-delivery.gif",
+                order_id: response.id,
+                handler: function(paymentResponse) {
+                  console.log(paymentResponse.razorpay_payment_id);
+                  console.log(paymentResponse.razorpay_order_id);
+                  console.log(paymentResponse.razorpay_signature);
+                  console.log("Payment Successful !!!");
+                  alert("Payment Successful !!!");
+                  if (typeof callback === "function") {
+                    callback();
+                  }
+                },
+                prefill: {
+                  "name": "",
+                  "email": "",
+                  "contact": ""
+                },
+                notes: {
+                  address: "OnlineFoodDeliverySystem"
+                },
+                theme: {
+                  color: "#3399cc"
+                },
+              };
+              let razorpay = new Razorpay(options);
+              razorpay.on('payment.failed', function(response) {
+                console.log(response.error.code);
+                console.log(response.error.description);
+                console.log(response.error.source);
+                console.log(response.error.step);
+                console.log(response.error.reason);
+                console.log(response.error.metadata.order_id);
+                console.log(response.error.metadata.payment_id);
+                alert("Oops Payment Failed !!!!");
+              });
+              razorpay.open();
+            }
+          },
+          error: function(error) {
+            console.log(error);
+            alert("Something went wrong");  
+          }
+        });
+      }
+      
+      // Update Quantity function (unchanged)
+      function updateQuantity(cartId, foodItemId, delta) {
+        let qtyInput = document.getElementById("qty_" + foodItemId);
+        let currentQty = parseInt(qtyInput.value);
+        let newQty = currentQty + delta;
+        if (newQty < 1) return;
+        fetch(`/onlinefoodDelivery/cartItems/updateItem/cartId/${cartId}/foodItemId/${foodItemId}?quantity=${newQty}`, {
+          method: "PUT"
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.message && data.message.toLowerCase().includes("updated successfully")) {
+            location.reload();
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch(error => {
+          console.error("Error updating quantity:", error);
+          alert("Error updating quantity");
+        });
+      }
+      
+      // Remove item function (unchanged)
+      function removeItem(cartId, foodItemId) {
+        if(confirm("Are you sure you want to remove this item?")) {
+          fetch(`/onlinefoodDelivery/cartItems/removeItem/cartId/${cartId}/foodItemId/${foodItemId}`, {
+            method: "DELETE"
+          })
+          .then(response => response.json())
+          .then(data => {
+            if(data.message && data.message.toLowerCase().includes("removed successfully")) {
+              alert("Item removed successfully!");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          })
+          .catch(error => {
+            console.error("Error removing item:", error);
+            alert("Error removing item");
+          });
+        }
+      }
+      
+      // Updated Place Order function
+      document.getElementById("placeOrderBtn").addEventListener("click", function() {
+        const paymentMethod = document.getElementById("paymentMethod").value;
+        const userId = /*[[${user.id}]]*/ 0;
+        if(paymentMethod === "cash"){
+          fetch(`/onlinefoodDelivery/orders/placeorder?userId=${userId}&paymentMethod=CASH`, {
+            method: "POST"
+          })
+          .then(response => response.json())
+          .then(data => {
+            if(data.message && data.message.toLowerCase().includes("success")){
+              alert("Order placed successfully!");
+              window.location.href = '/onlinefoodDelivery/orders/myorders';
+            } else {
+              alert("Error: " + (data.message ? data.message : "Unknown error"));
+            }
+          })
+          .catch(error => {
+            console.error("Error placing order:", error);
+            alert("Error placing order");
+          });
+        } else if(paymentMethod === "credit"){
+          paymentStart(function(){
+            fetch(`/onlinefoodDelivery/orders/placeorder?userId=${userId}&paymentMethod=ONLINE`, {
+              method: "POST"
+            })
+            .then(response => response.json())
+            .then(data => {
+              if(data.message && data.message.toLowerCase().includes("success")){
+                alert("Order placed successfully!");
+                window.location.href = '/onlinefoodDelivery/orders/myorders';
+              } else {
+                alert("Error: " + (data.message ? data.message : "Unknown error"));
+              }
+            })
+            .catch(error => {
+              console.error("Error placing order:", error);
+              alert("Error placing order");
+            });
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
+
+<!-- <!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cart - Food Delivery</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+  </head>
+  <body>
+    Include User Navbar for Cart
+    <div th:replace="fragments :: userNavbarCart"></div>
+
+    <div class="container my-5">
+      <h2 class="mb-4">Your Cart</h2>
+      <div th:if="${#lists.isEmpty(cart.items)}">
+        <p>
+          Your cart is empty.
+          <a th:href="@{/onlinefoodDelivery/fooditems/browse}">Browse Food Items</a>
+        </p>
+      </div>
+      <div th:if="${!#lists.isEmpty(cart.items)}">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Food Item</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="item : ${cart.items}" th:id="'row-' + ${item.foodItem.id}">
+              <td th:text="${item.foodItem.name}">Food Name</td>
+              <td>
+                <div class="input-group">
+                  <button class="btn btn-outline-secondary" type="button"
+                    th:onclick="'updateQuantity(' + ${cart.id} + ',' + ${item.foodItem.id} + ', -1)'">-</button>
+                  <input type="text" class="form-control text-center" th:id="'qty_' + ${item.foodItem.id}" th:value="${item.quantity}" readonly />
+                  <button class="btn btn-outline-secondary" type="button"
+                    th:onclick="'updateQuantity(' + ${cart.id} + ',' + ${item.foodItem.id} + ', 1)'">+</button>
+                </div>
+              </td>
+              <td th:text="${item.unitPrice}">0</td>
+              <td th:text="${item.totalPrice}">0</td>
+              <td>
+                <button class="btn btn-danger btn-sm" th:onclick="'removeItem(' + ${cart.id} + ',' + ${item.foodItem.id} + ')'">Remove</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="d-flex justify-content-end">
+          <h4>Total: $<span id="amount_field" th:text="${cart.totalAmount}">0</span></h4>
+        </div>
+        Payment and Place Order
+        <div class="mt-4">
+          <div class="row">
+            <div class="col-md-4">
+              <label for="paymentMethod" class="form-label">Payment Method</label>
+              <select id="paymentMethod" name="paymentMethod" class="form-select">
+                <option value="cash">Cash</option>
+                <option value="credit">Online Payment</option>
+              </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button onclick="paymentStart()" id="payOrderBtn" class="btn btn-primary">
+                pay
+              </button>
+              <button id="placeOrderBtn" class="btn btn-primary">
+                Place Order
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div th:replace="fragments :: footer"></div>
+    
+    
+	//<script src="script.js"></script>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+    
+    // first request server to create order
+	    function paymentStart(){
+      		console.log("payment started");
+      		let amount = parseInt($("#amount_field").text(), 10);
+      		console.log(amount); 
+          if(amount=='' || amount==null){
+            alert("Amount is blank");
+          }
+
+          //code : we will use ajax to send request to server
+          $.ajax({
+            url: "/onlinefoodDelivery/orders/createOrder",
+            data: JSON.stringify({amount:amount,info:"Order_request"}),
+            contentType: "application/json",
+            type: "POST",
+            dataType:"json",
+            success:function(response){
+              console.log(response);
+              //open payment form
+              if(response.status=="created"){
+                let options={
+                  key:"rzp_test_kDmY5OZwR2wFim",
+                  amount:response.amount,
+                  currency:"INR",
+                  name:"OnlineFoodDeliveryPayment",
+                  description:"Test Transaction",
+                  image:"D:\sts-workspace\OnlineFoodDeliverySystem\src\main\resources\static\images\food-delivery.gif",
+                  order_id:response.id,
+                  handler:function(response){
+                    console.log(response.razorpay_payment_id);
+                    console.log(response.razorpay_order_id);
+                    console.log(razorpay_signature);
+                    console.log("Payment Successfull !!!");
+                    alert("Payment Successfull !!!");
+                  },
+                  prefill:{
+                    "name": "", //your customer's name
+                    "email": "",
+                    "contact": ""
+                  },
+                  notes:{
+                    address:"OnlineFoodDeliverySystem"
+                  },
+                  theme:{
+                    color:"#3399cc"
+                  },
+                };
+                let razorpay=new Razorpay(options);
+                razorpay.on('payment.failed', function (response){
+                console.log(response.error.code);
+                console.log(response.error.description);
+                console.log(response.error.source);
+                console.log(response.error.step);
+                console.log(response.error.reason);
+                console.log(response.error.metadata.order_id);
+                console.log(response.error.metadata.payment_id);
+                alert("Oops Payment Failed !!!!");
+                });
+                razorpay.open();
+              }
+            },
+            error:function(error){
+              console.log(error);
+              alert("Something went wrong");  
+            }      
+	    });
+    }
+    
+      // Update Quantity function (calls PUT endpoint)
+      function updateQuantity(cartId, foodItemId, delta) {
+        let qtyInput = document.getElementById("qty_" + foodItemId);
+        let currentQty = parseInt(qtyInput.value);
+        let newQty = currentQty + delta;
+        if (newQty < 1) return;
+        fetch(`/onlinefoodDelivery/cartItems/updateItem/cartId/${cartId}/foodItemId/${foodItemId}?quantity=${newQty}`, {
+          method: "PUT"
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.message && data.message.toLowerCase().includes("updated successfully")) {
+            location.reload(); // Reload page to update quantities and total price
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch(error => {
+          console.error("Error updating quantity:", error);
+          alert("Error updating quantity");
+        });
+      }
+
+      // Remove item function
+      function removeItem(cartId, foodItemId) {
+        if(confirm("Are you sure you want to remove this item?")) {
+          fetch(`/onlinefoodDelivery/cartItems/removeItem/cartId/${cartId}/foodItemId/${foodItemId}`, {
+            method: "DELETE"
+          })
+          .then(response => response.json())
+          .then(data => {
+            if(data.message && data.message.toLowerCase().includes("removed successfully")) {
+              alert("Item removed successfully!");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          })
+          .catch(error => {
+            console.error("Error removing item:", error);
+            alert("Error removing item");
+          });
+        }
+      }
+
+      // Place order function
+      document.getElementById("placeOrderBtn").addEventListener("click", function() {
+   // paymentStart();
+    const userId = /*[[${user.id}]]*/ 0;
+    fetch(`/onlinefoodDelivery/orders/placeorder?userId=${userId}`, {
+      method: "POST"
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data && data.message && data.message.toLowerCase().includes("order placed successfully")) {
+        alert(data.message);
+        window.location.href = '/onlinefoodDelivery/orders/myorders';
+      } else {
+        alert("Error: " + (data && data.message ? data.message : "Unknown error"));
+      }
+    })
+    .catch(error => {
+      console.error("Error placing order:", error);
+      alert("Error placing order");
+    });
+  });
+    </script>
+  </body>
+</html> -->

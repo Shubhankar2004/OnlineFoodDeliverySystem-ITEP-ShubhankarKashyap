@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Update Food Item</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Bootstrap CSS CDN -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    
+    <style>
+      .alert-area {
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        z-index: 1000;
+        width: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Include Admin Navbar -->
+    <div th:replace="fragments :: adminNavbar"></div>
+    
+    <div class="container mt-5">
+      <h2>Update Food Item</h2>
+      
+      <!-- Alert Message Container -->
+      <div id="alert" class="alert-area"></div>
+      
+      <!-- Form for updating via AJAX -->
+      <form id="updateFoodItemForm">
+        <!-- Hidden field for ID -->
+        <input type="hidden" id="id" th:value="${updateFoodItemRequest.id}" />
+
+        <!-- Food Name -->
+        <div class="mb-3">
+          <label for="name" class="form-label">Food Name</label>
+          <input
+            type="text"
+            id="name"
+            class="form-control"
+            th:value="${updateFoodItemRequest.name}"
+            required
+          />
+        </div>
+
+        <!-- Food Type -->
+        <div class="mb-3">
+          <label for="foodType" class="form-label">Food Type</label>
+          <select id="foodType" class="form-select" required>
+            <option value="VEG" th:selected="${updateFoodItemRequest.foodType.name() == 'VEG'}">VEG</option>
+            <option value="NONVEG" th:selected="${updateFoodItemRequest.foodType.name() == 'NONVEG'}">NONVEG</option>
+          </select>
+        </div>
+
+        <!-- Price -->
+        <div class="mb-3">
+          <label for="price" class="form-label">Price</label>
+          <input
+            type="number"
+            step="0.01"
+            id="price"
+            class="form-control"
+            th:value="${updateFoodItemRequest.price}"
+            required
+          />
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea
+            id="description"
+            class="form-control"
+            required
+            th:text="${updateFoodItemRequest.description}"
+          ></textarea>
+        </div>
+
+        <!-- Category -->
+        <div class="mb-3">
+          <label for="category" class="form-label">Category</label>
+          <select id="category" class="form-select" required>
+            <option value="" disabled>-- Select Category --</option>
+            <option
+              th:each="cat : ${allCategories}"
+              th:value="${cat.name}"
+              th:text="${cat.name}"
+              th:selected="${cat.name == updateFoodItemRequest.category.name}"
+            >
+            </option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-success">Update Food Item</button>
+        <a class="btn btn-secondary" th:href="@{/onlinefoodDelivery/fooditems/manageFoodItem}">Cancel</a>
+      </form>
+    </div>
+    
+    <div th:replace="fragments :: footer"></div>
+    <!-- Bootstrap JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Utility function to show alert messages
+      function showAlert(message, type = "success") {
+        const alertDiv = document.getElementById("alert");
+        alertDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                                ${message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                              </div>`;
+        setTimeout(() => {
+          alertDiv.innerHTML = "";
+        }, 3000);
+      }
+
+      // Intercept the form submission
+      document.getElementById("updateFoodItemForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        // Gather form values
+        const id = document.getElementById("id").value.trim();
+        const name = document.getElementById("name").value.trim();
+        const foodType = document.getElementById("foodType").value;
+        const price = document.getElementById("price").value;
+        const description = document.getElementById("description").value.trim();
+        const categoryName = document.getElementById("category").value;
+
+        // Build JSON payload matching your UpdateFoodItemRequest
+        const payload = {
+          id: id,
+          name: name,
+          foodType: foodType,
+          price: price,
+          description: description,
+          category: {
+            name: categoryName
+          }
+        };
+
+        // Send JSON to your update endpoint
+        fetch(`/onlinefoodDelivery/fooditems/fooditem/update/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Check for success message
+            if (data.message && data.message.includes("Updation Successfull")) {
+              showAlert("Food item updated successfully!", "success");
+              setTimeout(() => {
+                window.location.href = "/onlinefoodDelivery/fooditems/manageFoodItem";
+              }, 2000);
+            } else {
+              // Show the error from the response
+              showAlert(data.message || "Error updating food item", "danger");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            showAlert("Error updating food item", "danger");
+          });
+      });
+    </script>
+  </body>
+</html>

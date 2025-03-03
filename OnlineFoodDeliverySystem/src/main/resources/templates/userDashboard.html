@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>User Dashboard - Food Delivery</title>
+    <!-- Bootstrap CSS CDN -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+    <!-- NEW: Custom style block to match home.html theme -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <style>
+      /* General Reset & Font */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+      }
+      body {
+        background-color: antiquewhite;
+        color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Include updated User Navbar Fragment (should be updated in fragments.html as shown below) -->
+    <div th:replace="fragments :: userNavbar"></div>
+    
+    <div class="container my-5">
+      <h1 class="text-center mb-4">
+        Welcome, <span th:text="${user.firstName}">User</span>!
+      </h1>
+      <div class="row mb-5">
+        <!-- Card for Browse Food Items -->
+        <div class="col-md-6 mb-4">
+          <div class="card shadow h-100">
+            <img
+              src="/images/food.gif"
+              class="card-img-top"
+              alt="Browse Food Items"
+              width="500" 
+              height="500"
+              style="border-radius: 50%;"
+            />
+            <div class="card-body text-center">
+              <h5 class="card-title">Browse Food Items</h5>
+              <p class="card-text">
+                Explore our delicious menu and find your favorites.
+              </p>
+              <a href="#" th:href="@{/onlinefoodDelivery/fooditems/browse}" class="btn btn-primary">Browse Now</a>
+            </div>
+          </div>
+        </div>
+        <!-- Card for My Orders -->
+        <div class="col-md-6 mb-4">
+          <div class="card shadow h-100">
+            <img
+              src="/images/bag.gif"
+              class="card-img-top"
+              alt="My Orders"
+              width="500" 
+              height="500"
+              style="border-radius: 50%;"
+            />
+            <div class="card-body text-center">
+              <h5 class="card-title">My Orders</h5>
+              <p class="card-text">
+                Track your current orders and review past orders.
+              </p>
+              <a href="#" th:href="@{/onlinefoodDelivery/orders/myorders}" class="btn btn-success">View Orders</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Feedback Form -->
+      <div class="row mb-5">
+        <div class="col-md-12">
+          <div class="card shadow">
+            <div class="card-header bg-info text-white">
+              <h5>Feedback</h5>
+            </div>
+            <div class="card-body">
+              <form action="#" method="post">
+                <div class="mb-3">
+                  <label for="feedback" class="form-label">Your Feedback</label>
+                  <textarea
+                    class="form-control"
+                    id="feedback"
+                    name="feedback"
+                    rows="3"
+                    placeholder="Share your thoughts..."
+                  ></textarea>
+                </div>
+                <button type="submit" class="btn btn-info">Submit Feedback</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Include Footer Fragment -->
+    <div th:replace="fragments :: footer"></div>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

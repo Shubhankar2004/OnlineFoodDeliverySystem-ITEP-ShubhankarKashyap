@@ -1,0 +1,14 @@
+package com.itep.project.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.itep.project.model.Image;
+
+public interface ImageRepository extends JpaRepository<Image,Long>{
+	
+	 //List<Image> findByFoodItemsId(Long id);
+	 
+	 Image findByFoodItemId(Long id);
+}

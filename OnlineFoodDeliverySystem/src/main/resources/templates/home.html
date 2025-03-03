@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Online Food Delivery - Home</title>
+    <!-- Bootstrap CSS CDN -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* General Reset & Font */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      body {
+        background-color: antiquewhite;
+        color: black;
+      }
+
+      /* Navbar (maroon background, antiquewhite text) */
+      .navbar {
+        background-color: maroon !important;
+      }
+      .navbar-brand,
+      .navbar-nav .nav-link {
+        color: antiquewhite !important;
+        position: relative;
+      }
+      .navbar-brand:hover,
+      .navbar-nav .nav-link:hover {
+        color: #ffb6c1 !important;
+        text-decoration: none;
+      }
+      .navbar-nav .nav-link::after {
+        content: '';
+        width: 0;
+        height: 3px;
+        background: #ff004f;
+        position: absolute;
+        left: 0;
+        bottom: -6px;
+        transition: 0.5s;
+      }
+      .navbar-nav .nav-link:hover::after {
+        width: 100%;
+      }
+
+      /* Carousel */
+      .carousel-item {
+        height: 70vh;
+        min-height: 300px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        animation: fadeIn 1.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0.6; }
+        to { opacity: 1; }
+      }
+      .carousel-caption h5,
+      .carousel-caption p {
+        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+      }
+
+      /* Section headings */
+      section h2 {
+        font-size: 40px;
+        font-weight: 600;
+        text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.8);
+        margin-bottom: 20px;
+      }
+
+      /* ABOUT US SECTION */
+      #about {
+        background-color: maroon; /* matches grandma's index about section */
+        color: antiquewhite;      /* text color */
+        padding: 80px 0;
+      }
+      .about-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      /* The 'drop' shape for the about.gif image */
+      .about-drop {
+        width: 100%;
+        max-width: 300px;
+        border-top-left-radius: 50%;
+        border-bottom-right-radius: 50%;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      /* CONTACT US SECTION */
+      #contact {
+        background-color: antiquewhite; /* background for contact */
+        color: maroon;                  /* text color */
+        padding: 80px 0;
+      }
+      .contact-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      /* Circle shape for contact.gif */
+      .contact-circle {
+        width: 100%;
+        max-width: 300px;
+        border-radius: 50%;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Footer (same style as index.html) */
+      footer {
+        background-color: maroon;
+        color: antiquewhite;
+        text-align: center;
+        padding: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid" id="home">
+        <a class="navbar-brand" href="#home">
+          <img
+            th:src="@{/images/food-delivery.gif}"
+            alt="Logo"
+            width="80"
+            height="80"
+            style="border-radius: 50%;"
+          />
+          <b style="margin-left: 20px;">Online Food Delivery</b>
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+          style="border-color: antiquewhite;"
+        >
+          <span class="navbar-toggler-icon" style="color: white;"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="#about">About Us</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#contact">Contact Us</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" th:href="@{/onlinefoodDelivery/admin/login}">Admin</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" th:href="@{/onlinefoodDelivery/user/login}">User</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- CAROUSEL -->
+    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        <button
+          type="button"
+          data-bs-target="#carouselExampleIndicators"
+          data-bs-slide-to="0"
+          class="active"
+          aria-current="true"
+          aria-label="Slide 1"
+        ></button>
+        <button
+          type="button"
+          data-bs-target="#carouselExampleIndicators"
+          data-bs-slide-to="1"
+          aria-label="Slide 2"
+        ></button>
+        <button
+          type="button"
+          data-bs-target="#carouselExampleIndicators"
+          data-bs-slide-to="2"
+          aria-label="Slide 3"
+        ></button>
+      </div>
+      <div class="carousel-inner">
+        <div
+          class="carousel-item active"
+          th:style="|background-image: url('@{/images/silde1.jpg}');|"
+        >
+          <div class="carousel-caption d-none d-md-block">
+            <h5>Delicious Food</h5>
+            <p>Enjoy your favorite dishes delivered fast.</p>
+          </div>
+        </div>
+        <div
+          class="carousel-item"
+          th:style="|background-image: url('@{/images/slide2.png}');|"
+        >
+          <div class="carousel-caption d-none d-md-block">
+            <h5>Fresh Ingredients</h5>
+            <p>Quality food made with fresh ingredients.</p>
+          </div>
+        </div>
+        <div
+          class="carousel-item"
+          th:style="|background-image: url('@{/images/slide3.jpg}');|"
+        >
+          <div class="carousel-caption d-none d-md-block">
+            <h5>Fast Delivery</h5>
+            <p>Your meal delivered right to your doorstep.</p>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+
+    <!-- ABOUT US SECTION -->
+    <section id="about">
+      <div class="container">
+        <div class="row about-row">
+          <!-- IMAGE Column -->
+          <div class="col-md-6 text-center about-col-1">
+            <img th:src="@{/images/about.gif}" alt="About Image" class="about-drop" />
+          </div>
+          <!-- TEXT Column -->
+          <div class="col-md-6 about-col-2">
+            <h2>About Us</h2>
+            <p style="font-size: 18px;">
+              Welcome to our Online Food Delivery service! Inspired by the warmth
+              and authenticity of home-cooked meals, we deliver delicious dishes
+              right to your doorstep. Enjoy quality food made with fresh ingredients
+              and a touch of tradition.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT US SECTION -->
+    <section id="contact">
+      <div class="container">
+        <div class="row contact-row">
+          <!-- TEXT Column -->
+          <div class="col-md-6 contact-col-1">
+            <h2>Contact Us</h2>
+            <p style="font-size: 18px;">
+              Have questions or need support? Reach out to us:
+            </p>
+            <ul style="font-size: 18px; list-style: none; padding-left: 0;">
+              <li><b>Phone:</b> +91 9370207470</li>
+              <li>
+                <b>Email:</b>
+                <a href="mailto:shubhankarkashyap04@gmail.com">shubhankarkashyap04@gmail.com</a>
+              </li>
+              <li><b>Address:</b> 123 Food Street, Pune City</li>
+            </ul>
+          </div>
+          <!-- IMAGE Column -->
+          <div class="col-md-6 text-center contact-col-2">
+            <img th:src="@{/images/contact.gif}" alt="Contact Image" class="contact-circle" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <b>@2025 all rights reserved to Shubhankar Kashyap</b>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    ></script>
+  </body>
+</html>

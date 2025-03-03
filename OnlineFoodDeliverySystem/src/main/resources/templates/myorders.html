@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Orders - Food Delivery</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    
+  </head>
+  <body>
+    <!-- Include User Navbar for Cart/Orders -->
+    <div th:replace="fragments :: userNavbarCart"></div>
+
+    <div class="container my-5">
+      <h2 class="mb-4">My Orders</h2>
+
+      <!-- Current Orders Section -->
+      <section>
+        <h3>Current Orders</h3>
+        <div th:if="${#lists.isEmpty(currentOrders)}">
+          <p>No current orders found.</p>
+        </div>
+        <div th:if="${!#lists.isEmpty(currentOrders)}">
+          <table class="table table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>Order Date</th>
+                <th>Status</th>
+                <th>Total Amount</th>
+                <th>Payment Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="order : ${currentOrders}" th:id="'order-' + ${order.id}">
+                <td th:text="${order.orderDate}">Date</td>
+                <td th:text="${order.orderStatus}">Status</td>
+                <td th:text="${order.totalAmount}">Amount</td>
+                <td th:text="${order.paymentStatus}">Payment Status</td>
+                <td>
+                  <button class="btn btn-warning btn-sm" th:if="${order.orderStatus != 'OUTFORDELIVERY'}"
+                    th:onclick="'cancelOrder(' + ${order.id} + ')'">Cancel</button>
+                  <span th:if="${order.orderStatus == 'OUTFORDELIVERY'}">Cannot Cancel</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Past Orders Section -->
+      <section class="mt-5">
+        <h3>Past Orders</h3>
+        <div th:if="${#lists.isEmpty(pastOrders)}">
+          <p>No past orders found.</p>
+        </div>
+        <div th:if="${!#lists.isEmpty(pastOrders)}">
+          <table class="table table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>Order Date</th>
+                <th>Status</th>
+                <th>Total Amount</th>
+                <th>Payment Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="order : ${pastOrders}">
+                <td th:text="${order.orderDate}">Date</td>
+                <td th:text="${order.orderStatus}">Status</td>
+                <td th:text="${order.totalAmount}">Amount</td>
+                <td th:text="${order.paymentStatus}">Payment Status</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div th:replace="fragments :: footer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Cancel Order function with refund note (refund logic must be implemented in your service layer)
+      function cancelOrder(orderId) {
+        if(confirm("Are you sure you want to cancel this order?")) {
+          fetch(`/onlinefoodDelivery/orders/updateStatus/${orderId}?orderStatus=CANCELLED`, {
+            method: "PUT"
+          })
+          .then(response => response.json())
+          .then(data => {
+            if(data.message && data.message.toLowerCase().includes("successfully")) {
+              alert("Order cancelled successfully! Refund process initiated.");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          })
+          .catch(error => {
+            console.error("Error cancelling order:", error);
+            alert("Error cancelling order");
+          });
+        }
+      }
+    </script>
+  </body>
+</html>
+
+
+<!-- <!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Orders - Food Delivery</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+  </head>
+  <body>
+    Include User Navbar for Cart/Orders
+    <div th:replace="fragments :: userNavbarCart"></div>
+
+    <div class="container my-5">
+      <h2 class="mb-4">My Orders</h2>
+
+      Current Orders Section
+      <section>
+        <h3>Current Orders</h3>
+        <div th:if="${#lists.isEmpty(currentOrders)}">
+          <p>No current orders found.</p>
+        </div>
+        <div th:if="${!#lists.isEmpty(currentOrders)}">
+          <table class="table table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>Order Date</th>
+                <th>Status</th>
+                <th>Total Amount</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="order : ${currentOrders}" th:id="'order-' + ${order.id}">
+                <td th:text="${order.orderDate}">Date</td>
+                <td th:text="${order.status}">Status</td>
+                <td th:text="${order.totalAmount}">Amount</td>
+                <td>
+                  <button class="btn btn-warning btn-sm" th:if="${order.status != 'OUTFORDELIVERY'}"
+                    th:onclick="'cancelOrder(' + ${order.id} + ')'">Cancel</button>
+                  <span th:if="${order.status == 'OUTFORDELIVERY'}">Cannot Cancel</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      Past Orders Section
+      <section class="mt-5">
+        <h3>Past Orders</h3>
+        <div th:if="${#lists.isEmpty(pastOrders)}">
+          <p>No past orders found.</p>
+        </div>
+        <div th:if="${!#lists.isEmpty(pastOrders)}">
+          <table class="table table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>Order Date</th>
+                <th>Status</th>
+                <th>Total Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="order : ${pastOrders}">
+                <td th:text="${order.orderDate}">Date</td>
+                <td th:text="${order.status}">Status</td>
+                <td th:text="${order.totalAmount}">Amount</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div th:replace="fragments :: footer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Cancel Order function
+      function cancelOrder(orderId) {
+        if(confirm("Are you sure you want to cancel this order?")) {
+          fetch(`/onlinefoodDelivery/orders/updateStatus/${orderId}?status=CANCELLED`, {
+            method: "PUT"
+          })
+          .then(response => response.json())
+          .then(data => {
+            if(data.message && data.message.toLowerCase().includes("successfully")) {
+              alert("Order cancelled successfully!");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          })
+          .catch(error => {
+            console.error("Error cancelling order:", error);
+            alert("Error cancelling order");
+          });
+        }
+      }
+    </script>
+  </body>
+</html>
+ -->

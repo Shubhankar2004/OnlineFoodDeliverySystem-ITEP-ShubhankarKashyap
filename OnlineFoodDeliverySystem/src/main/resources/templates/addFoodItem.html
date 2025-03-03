@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Add Food Item</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+  </head>
+  <body>
+
+    <div id="alert"></div>
+
+    <!-- Include Admin Navbar -->
+    <div th:replace="fragments :: adminNavbar"></div>
+
+    <div class="container mt-5">
+      <h2>Add Food Item</h2>
+      <form id="addFoodItemForm">
+        <!-- Food Name -->
+        <div class="mb-3">
+          <label for="name" class="form-label">Food Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            class="form-control"
+            placeholder="Enter food name"
+            required
+          />
+        </div>
+
+        <!-- Food Type -->
+        <div class="mb-3">
+          <label for="foodType" class="form-label">Food Type</label>
+          <select id="foodType" name="foodType" class="form-select" required>
+            <option value="VEG">VEG</option>
+            <option value="NONVEG">NONVEG</option>
+          </select>
+        </div>
+
+        <!-- Price -->
+        <div class="mb-3">
+          <label for="price" class="form-label">Price</label>
+          <input
+            type="number"
+            step="0.01"
+            id="price"
+            name="price"
+            class="form-control"
+            placeholder="Enter price"
+            required
+          />
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            class="form-control"
+            placeholder="Enter description"
+          ></textarea>
+        </div>
+
+        <!-- Category -->
+        <div class="mb-3">
+          <label for="category" class="form-label">Category</label>
+          <select id="category" name="category.name" class="form-select" required>
+            <option value="" disabled selected>-- Select Category --</option>
+            <option
+              th:each="cat : ${allCategories}"
+              th:value="${cat.name}"
+              th:text="${cat.name}"
+            ></option>
+          </select>
+        </div>
+
+        <!-- Image Upload -->
+        <div class="mb-3">
+          <label for="imageFile" class="form-label">Food Image (optional)</label>
+          <input
+            type="file"
+            id="imageFile"
+            name="file"
+            class="form-control"
+            accept="image/*"
+          />
+        </div>
+
+        <button type="submit" class="btn btn-success">Add Food Item</button>
+        <a class="btn btn-secondary" th:href="@{/onlinefoodDelivery/fooditems/manageFoodItem}">
+          Cancel
+        </a>
+      </form>
+    </div>
+
+    <div th:replace="fragments :: footer"></div>
+    <!-- Bootstrap JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      function showAlert(message, type = "success") {
+        const alertDiv = document.getElementById("alert");
+        alertDiv.innerHTML = `
+          <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>`;
+        setTimeout(() => {
+          alertDiv.innerHTML = "";
+        }, 3000);
+      }
+
+      document.getElementById("addFoodItemForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById("name").value.trim();
+        const foodType = document.getElementById("foodType").value;
+        const price = document.getElementById("price").value;
+        const description = document.getElementById("description").value.trim();
+        const categoryName = document.getElementById("category").value;
+
+        const payload = {
+          name: name,
+          foodType: foodType,
+          price: price,
+          description: description,
+          category: {
+            name: categoryName
+          }
+        };
+
+        // 1) Create the FoodItem
+        fetch("/onlinefoodDelivery/fooditems/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.message && data.message.includes("Added Successfully")) {
+            const newFoodItemId = data.data.id;
+            // 2) If there's an image, upload it
+            const fileInput = document.getElementById("imageFile");
+            if (fileInput.files && fileInput.files.length > 0) {
+              const formData = new FormData();
+              formData.append("file", fileInput.files[0]);
+              formData.append("foodItemId", newFoodItemId);
+
+              fetch("/onlinefoodDelivery/images/upload", {
+                method: "POST",
+                body: formData,
+              })
+              .then(imgResponse => {
+                if (!imgResponse.ok) {
+                  throw new Error("Image upload failed");
+                }
+                return imgResponse.json();
+              })
+              .then(imgData => {
+                if (imgData.message && imgData.message.includes("Uploaded Successfully")) {
+                  showAlert("Food item and image uploaded successfully!", "success");
+                  setTimeout(() => {
+                    window.location.href = "/onlinefoodDelivery/fooditems/manageFoodItem";
+                  }, 1500);
+                } else {
+                  showAlert("Food item added but image upload failed.", "warning");
+                }
+              })
+              .catch(error => {
+                console.error("Error uploading image:", error);
+                showAlert("Food item added, but image upload failed", "warning");
+              });
+            } else {
+              showAlert("Food item added successfully!", "success");
+              setTimeout(() => {
+                window.location.href = "/onlinefoodDelivery/fooditems/manageFoodItem";
+              }, 1500);
+            }
+          } else {
+            showAlert(data.message || "Error adding food item", "danger");
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          showAlert("Error adding food item", "danger");
+        });
+      });
+    </script>
+  </body>
+</html>

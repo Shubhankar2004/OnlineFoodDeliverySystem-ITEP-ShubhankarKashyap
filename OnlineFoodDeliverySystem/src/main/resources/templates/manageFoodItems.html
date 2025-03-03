@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Manage Food Items</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Bootstrap CSS CDN -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Custom CSS (optional) -->
+   	<link rel="stylesheet" th:href="@{/css/styles.css}" />
+   	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <style>
+     
+     body{
+    	background-color:antiquewhite;
+    	color:black;
+	 }
+      .action-btn {
+        margin-right: 5px;
+      }
+      .alert-area {
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        z-index: 1000;
+        width: 300px;
+      }
+      .filter-group {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Include the Admin Navbar Fragment -->
+    <div th:replace="fragments :: adminNavbar"></div>
+
+    <div class="container my-4">
+      <h2 class="mb-4">Manage Food Items</h2>
+
+      <!-- Alert Message Container (for notifications) -->
+      <div id="alert" class="alert-area"></div>
+
+      <!-- Top Controls: Add Button, Search Bar & Filters -->
+      <div class="row mb-3 align-items-center">
+        <!-- Add Food Item Button -->
+        <div class="col-md-3 mb-2">
+          <a class="btn btn-primary w-100" th:href="@{/onlinefoodDelivery/fooditems/addform}">
+            Add Food Item
+          </a>
+        </div>
+
+        <!-- Search by Name -->
+        <div class="col-md-3 mb-2">
+          <input
+            type="text"
+            id="searchName"
+            class="form-control"
+            placeholder="Search by name"
+          />
+        </div>
+
+        <!-- Category Filter -->
+        <div class="col-md-3 mb-2">
+          <select id="filterCategory" class="form-select">
+            <option value="">All Categories</option>
+            <option
+              th:each="cat : ${allCategories}"
+              th:value="${cat.id}"
+              th:text="${cat.name}"
+            ></option>
+          </select>
+        </div>
+
+        <!-- Food Type Filter -->
+        <div class="col-md-2 mb-2">
+          <select id="filterFoodType" class="form-select">
+            <option value="">All Food Types</option>
+            <option value="VEG">VEG</option>
+            <option value="NONVEG">NONVEG</option>
+          </select>
+        </div>
+
+        <!-- Search Button -->
+        <div class="col-md-1 mb-2">
+          <button id="searchBtn" class="btn btn-secondary w-100">Search</button>
+        </div>
+      </div>
+
+      <!-- Food Items Table -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Food Type</th>
+              <th>Price</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="foodItemsTableBody">
+            <!-- Iterate over food items initially loaded from the controller -->
+            <tr
+              th:each="foodItem : ${foodItems}"
+              th:id="'row-' + ${foodItem.id}"
+            >
+              <td th:text="${foodItem.id}"></td>
+              <td th:text="${foodItem.name}"></td>
+              <td th:text="${foodItem.foodType}"></td>
+              <td th:text="${foodItem.price}"></td>
+              <td th:text="${foodItem.description}"></td>
+              <td th:text="${foodItem.category.name}"></td>
+              <td>
+                <!-- Update Button: redirects to an update form with the id in query parameter -->
+                <button
+                  class="btn btn-sm btn-warning action-btn"
+                  th:onclick="|location.href='/onlinefoodDelivery/fooditems/updateform/${foodItem.id}'|"
+                >
+                  Update
+                </button>
+                <!-- Delete Button -->
+                <button
+                  class="btn btn-sm btn-danger action-btn"
+                  th:onclick="|deleteFoodItem(${foodItem.id})|"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Include the Footer Fragment -->
+    <div th:replace="fragments :: footer"></div>
+
+    <!-- Bootstrap JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript for handling search, delete, and dynamic table update -->
+    <script>
+      // Display Bootstrap alert messages
+      function showAlert(message, type = "success") {
+        const alertDiv = document.getElementById("alert");
+        alertDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>`;
+        setTimeout(() => {
+          alertDiv.innerHTML = "";
+        }, 3000);
+      }
+
+      // Delete Food Item via AJAX
+      function deleteFoodItem(id) {
+        if (confirm("Are you sure you want to delete this food item?")) {
+          fetch(`/onlinefoodDelivery/fooditems/fooditem/${id}`, {
+            method: "DELETE",
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Delete response:", data);
+              const msg = data.message ? data.message.trim().toLowerCase() : "";
+              if (msg.includes("deletion successfull")) {
+                showAlert("Food Item deleted successfully!");
+                const row = document.getElementById(`row-${id}`);
+                if (row) row.remove();
+              } else {
+                showAlert(data.message, "danger");
+              }
+            })
+            .catch((error) => {
+              console.error("Error deleting food item:", error);
+              showAlert("Error deleting food item", "danger");
+            });
+        }
+      }
+
+      // Handle Search & Filter
+      document.getElementById("searchBtn").addEventListener("click", function () {
+        const name = document.getElementById("searchName").value.trim();
+        const categoryId = document.getElementById("filterCategory").value;
+        const foodType = document.getElementById("filterFoodType").value;
+
+        // Build query parameters
+        let query = "?";
+        // Add name if present
+        if (name) {
+          query += `name=${encodeURIComponent(name)}&`;
+        }
+        // Add categoryId if present
+        if (categoryId) {
+          query += `categoryId=${encodeURIComponent(categoryId)}&`;
+        }
+        // Add foodType if present
+        if (foodType) {
+          query += `foodType=${encodeURIComponent(foodType)}&`;
+        }
+        // Remove trailing '&' or '?' if present
+        if (query.endsWith("&") || query.endsWith("?")) {
+          query = query.slice(0, -1);
+        }
+
+        // Now call the search endpoint
+        fetch(`/onlinefoodDelivery/fooditems/search${query}`, {
+          method: "GET",
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Search response:", data);
+            // If "Found" in the message, we assume data.data is the list
+            if (data.message && data.message.toLowerCase().includes("found")) {
+              const tbody = document.getElementById("foodItemsTableBody");
+              tbody.innerHTML = ""; // Clear current table body
+
+              // Populate with new results
+              data.data.forEach((foodItem) => {
+                const tr = document.createElement("tr");
+                tr.id = "row-" + foodItem.id;
+                tr.innerHTML = `
+                  <td>${foodItem.id}</td>
+                  <td>${foodItem.name}</td>
+                  <td>${foodItem.foodType}</td>
+                  <td>${foodItem.price}</td>
+                  <td>${foodItem.description}</td>
+                  <td>${foodItem.category.name}</td>
+                  <td>
+                    <button class="btn btn-sm btn-warning action-btn" onclick="location.href='updateFoodItem.html?id=${foodItem.id}'">
+                      Update
+                    </button>
+                    <button class="btn btn-sm btn-danger action-btn" onclick="deleteFoodItem(${foodItem.id})">
+                      Delete
+                    </button>
+                  </td>
+                `;
+                tbody.appendChild(tr);
+              });
+            } else {
+              // Show error message from the server
+              showAlert(data.message, "danger");
+              // Optionally clear the table if no items found
+              document.getElementById("foodItemsTableBody").innerHTML = "";
+            }
+          })
+          .catch((error) => {
+            console.error("Error searching food items:", error);
+            showAlert("Error searching food items", "danger");
+          });
+      });
+    </script>
+  </body>
+</html>

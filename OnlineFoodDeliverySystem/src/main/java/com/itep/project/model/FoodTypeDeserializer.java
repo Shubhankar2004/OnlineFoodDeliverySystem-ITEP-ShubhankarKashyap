@@ -1,0 +1,14 @@
+package com.itep.project.model;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import java.io.IOException;
+
+public class FoodTypeDeserializer extends JsonDeserializer<FoodType> {
+    @Override
+    public FoodType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+        String value = p.getValueAsString().toUpperCase();
+        return FoodType.valueOf(value);
+    }
+}

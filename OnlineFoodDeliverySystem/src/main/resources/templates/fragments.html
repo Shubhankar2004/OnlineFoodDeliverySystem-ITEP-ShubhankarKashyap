@@ -1,0 +1,323 @@
+<!-- src/main/resources/templates/fragments.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fragments</title>
+    
+    <!-- Include Bootstrap Icons so your <i class="bi ..."> tags work -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+    
+    <style>
+      /*
+       * Underline animation on hover, matching the style in home.html
+       * (color #ff004f, etc.)
+       */
+      .navbar-nav .nav-link {
+        position: relative;
+      }
+      .navbar-nav .nav-link::after {
+        content: '';
+        width: 0;
+        height: 3px;
+        background: #ff004f;
+        position: absolute;
+        left: 0;
+        bottom: -6px;
+        transition: 0.5s;
+      }
+      .navbar-nav .nav-link:hover::after {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Admin Navbar Fragment -->
+    <div th:fragment="adminNavbar">
+      <nav class="navbar navbar-expand-lg" style="background-color: maroon !important;">
+        <div class="container-fluid">
+          <a class="navbar-brand d-flex align-items-center" th:href="@{/admin/dashboard}">
+            <img
+              th:src="@{/images/food-delivery.gif}"
+              alt="Admin Logo"
+              width="50"
+              height="50"
+              style="border-radius:50%; margin-right:10px;"
+            />
+            <span style="color: antiquewhite;">Admin Dashboard</span>
+          </a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#adminNav"
+            aria-controls="adminNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+            style="border-color: antiquewhite;"
+          >
+            <span class="navbar-toggler-icon" style="color: white;"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/categories/manageCategory}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-card-list" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Manage Categories</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/fooditems/manageFoodItem}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-basket3" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Manage Food Items</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/orders/trackOrders}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-truck" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">User Orders</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/admins/logout}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-box-arrow-right" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Logout</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Footer Fragment -->
+    <div
+      th:fragment="footer"
+      style="bottom: 0; margin-top:20px; background-color: maroon !important;"
+    >
+      <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+          <p>&copy; 2025 FoodDelivery. All rights reserved.</p>
+          <p>
+            <a href="mailto:shubhankarkashyap04@gmail.com" class="text-white">
+              shubhankarkashyap04@gmail.com
+            </a>
+          </p>
+        </div>
+      </footer>
+    </div>
+    
+    <!-- User Navbar Fragment -->
+    <div th:fragment="userNavbar">
+      <nav class="navbar navbar-expand-lg" style="background-color: maroon !important;">
+        <div class="container">
+          <a
+            class="navbar-brand d-flex align-items-center"
+            th:href="@{/onlinefoodDelivery/users/dashboard}"
+            style="color: antiquewhite;"
+          >
+            <img
+              th:src="@{/images/food-delivery.gif}"
+              alt="Logo"
+              width="50"
+              height="50"
+              style="border-radius: 50%; margin-right: 10px;"
+            />
+            <span>Food Delivery</span>
+          </a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+            style="border-color: antiquewhite;"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/users/profile}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-person-circle" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Profile</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/orders/myorders}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-receipt" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Orders</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/fooditems/browse}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-search" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Browse</span>
+                </a>
+              </li>
+              <li class="nav-item position-relative">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/carts/get/{cartId}(cartId=${cart.id})}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-cart4" style="font-size:1.5rem;"></i>
+                  <span
+                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    th:text="${cart.items.size()}"
+                  >
+                    0
+                  </span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/users/logout}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-box-arrow-right" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Logout</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+    
+    <!-- User Navbar for Cart and Orders pages (with icons, same style) -->
+    <div th:fragment="userNavbarCart">
+      <nav class="navbar navbar-expand-lg" style="background-color: maroon !important;">
+        <div class="container">
+          <!-- LOGO + TITLE (similar to userNavbar) -->
+          <a
+            class="navbar-brand d-flex align-items-center"
+            th:href="@{/onlinefoodDelivery/users/dashboard}"
+            style="color: antiquewhite;"
+          >
+            <img
+              th:src="@{/images/food-delivery.gif}"
+              alt="Logo"
+              width="50"
+              height="50"
+              style="border-radius: 50%; margin-right: 10px;"
+            />
+            <span>Food Delivery</span>
+          </a>
+
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarCart"
+            aria-controls="navbarCart"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+            style="border-color: antiquewhite;"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarCart">
+            <ul class="navbar-nav ms-auto align-items-center">
+              <!-- Profile Link -->
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/users/profile}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-person-circle" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Profile</span>
+                </a>
+              </li>
+              <!-- Orders -->
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/orders/myorders}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-receipt" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Orders</span>
+                </a>
+              </li>
+              <!-- Browse Food Items -->
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/fooditems/browse}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-search" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Browse</span>
+                </a>
+              </li>
+              <!-- Cart Link -->
+              <li class="nav-item position-relative">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/carts/get/{cartId}(cartId=${cart.id})}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-cart4" style="font-size:1.5rem;"></i>
+                  <span
+                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    th:text="${cart.items.size()}"
+                  >
+                    0
+                  </span>
+                </a>
+              </li>
+              <!-- Logout -->
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  th:href="@{/onlinefoodDelivery/users/logout}"
+                  style="color: antiquewhite;"
+                >
+                  <i class="bi bi-box-arrow-right" style="font-size:1.5rem;"></i>
+                  <span class="d-none d-lg-inline ms-1">Logout</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </body>
+</html>
