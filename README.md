@@ -1,5 +1,4 @@
 # OnineFoodDelvirySystem-ITEP-ShubhankarKashyap
-Below is a structured write-up you can include in your project report. Feel free to adapt or expand any sections as needed.
 
 1. Introduction and Objective
 
